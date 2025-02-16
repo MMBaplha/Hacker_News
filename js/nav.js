@@ -4,6 +4,15 @@
  * Handling navbar clicks and updating navbar
  */
 
+// Select the submit story form and navbar link
+const $submitForm = $("#submit-form");
+const $navSubmit = $("#nav-submit");
+
+// Event listener for clicking "Submit" in the navbar
+$navSubmit.on("click", function () {
+  $submitForm.toggleClass("hidden"); // Toggle visibility
+});
+
 /** Show main list of all stories when click site name */
 
 function navAllStories(evt) {
