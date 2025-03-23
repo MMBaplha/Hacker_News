@@ -88,6 +88,18 @@ class StoryList {
     
     return newStory;
   }
+
+  async updateStory(storyId, storyData) {
+    await axios({
+      method: "PATCH",
+      url: `${BASE_URL}/stories/${storyId}`,
+      data: { token: currentUser.loginToken, ...storyData },
+    });
+  
+    // Update local data
+    const story = this.stories.find(story => story.storyId === storyId);
+    Object.assign(story, storyData);
+  }  
 }
 
 
@@ -129,25 +141,17 @@ class User {
    */
 
   static async signup(username, password, name) {
-    const response = await axios({
-      url: `${BASE_URL}/signup`,
-      method: "POST",
-      data: { user: { username, password, name } },
-    });
-
-    let { user } = response.data
-
-    return new User(
-      {
-        username: user.username,
-        name: user.name,
-        createdAt: user.createdAt,
-        favorites: user.favorites,
-        ownStories: user.stories
-      },
-      response.data.token
-    );
-  }
+    try {
+      const response = await axios.post(`${BASE_URL}/signup`, { user: { username, password, name } });
+      return new User(response.data.user, response.data.token);
+    } catch (err) {
+      if (err.response && err.response.status === 409) {
+        alert("Username already taken. Please choose another one.");
+      } else {
+        alert("Error signing up. Please try again.");
+      }
+    }
+  }  
 
   /** Login in user with API, make User instance & return it.
 
@@ -156,25 +160,17 @@ class User {
    */
 
   static async login(username, password) {
-    const response = await axios({
-      url: `${BASE_URL}/login`,
-      method: "POST",
-      data: { user: { username, password } },
-    });
-
-    let { user } = response.data;
-
-    return new User(
-      {
-        username: user.username,
-        name: user.name,
-        createdAt: user.createdAt,
-        favorites: user.favorites,
-        ownStories: user.stories
-      },
-      response.data.token
-    );
-  }
+    try {
+      const response = await axios.post(`${BASE_URL}/login`, { user: { username, password } });
+      return new User(response.data.user, response.data.token);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        alert("Invalid username or password. Please try again.");
+      } else {
+        alert("Error logging in. Please try again.");
+      }
+    }
+  }  
 
   /** When we already have credentials (token & username) for a user,
    *   we can log them in automatically. This function does that.
@@ -205,4 +201,34 @@ class User {
       return null;
     }
   }
+
+  async addFavorite(story) {
+    this.favorites.push(story);
+    await axios.post(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, {
+      token: this.loginToken
+    });
+  } 
+
+  async removeFavorite(story) {
+    this.favorites = this.favorites.filter(s => s.storyId !== story.storyId);
+    await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, {
+      data: { token: this.loginToken }
+    });
+  }
+  
+  isFavorite(story) {
+    return this.favorites.some(s => s.storyId === story.storyId);
+  }
+
+  async deleteStory(storyId) {
+    await axios({
+      method: "DELETE",
+      url: `${BASE_URL}/stories/${storyId}`,
+      data: { token: currentUser.loginToken },
+    });
+  
+    // Remove the story from the local list
+    this.stories = this.stories.filter(story => story.storyId !== storyId);
+    currentUser.ownStories = currentUser.ownStories.filter(story => story.storyId !== storyId);
+  }  
 }
