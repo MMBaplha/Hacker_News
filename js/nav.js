@@ -18,6 +18,11 @@ $navSubmit.on("click", function (evt) {
 });
 
 $("#nav-user-profile").on("click", function () {
+  
+  /* Hide the Submit btn when profile is open */
+  $("#nav-submit").parent().hide();
+
+  /* Show profile form and hide pther components*/
   $(".stories-container, .account-forms-container").addClass("hidden");
   $(".profile-form-container").removeClass("hidden");
 });
@@ -51,8 +56,12 @@ function updateNavOnLogin() {
   $("#nav-logout").removeClass("hidden");
   $("#nav-user-profile").text(`${currentUser.name}`).show();
 
-  /** Show "Submit" link only when logged in. **/ 
-  $("#nav-submit").parent().show();
+  /** Show "Submit" link only when logged in and on the landing page. **/ 
+  if (currentUser && (window.location.hash === "" || window.location.hash === "#")) {
+    $("#nav-submit").parent().show();
+  } else {
+    $("#nav-submit").parent().hide();
+  }
 }
 
 // Ensure "Submit" is hidden on page load
