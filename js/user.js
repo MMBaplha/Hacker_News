@@ -107,10 +107,10 @@ function saveUserCredentialsInLocalStorage() {
  * - generate the user profile part of the page
  */
 
-function updateUIOnUserLogin() {
-  console.debug("updateUIOnUserLogin");
+function updateNavOnLogin() {
+  if (!currentUser || !currentUser.name) return;
 
-  $allStoriesList.show();
-
-  updateNavOnLogin();
+  $navLogin.hide();
+  $navLogOut.show();
+  $navUserProfile.text(`${currentUser.name}`).show();
 }
